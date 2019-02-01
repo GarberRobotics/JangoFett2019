@@ -27,6 +27,15 @@ public class Robot extends TimedRobot {
   public static Xbox stick = new Xbox(0);
   Command m_autonomousCommand;
   SendableChooser<Command> m_chooser = new SendableChooser<>();
+  
+  //Vision
+  private final Object imgLock = new Object();
+	private VisionThread visionThread;
+	private double centerX = 0.0;
+	public static double turn = 0.0;
+	
+	public int width = 640;
+	public int height = 480;
 
   /**
    * This function is run when the robot is first started up and should be
@@ -36,6 +45,27 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     stick = new Xbox(0);
     m_oi = new OI();
+    
+    //If you want to use a USB Camera
+		//UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+		//If you want to use the Axis Camera
+    AxisCamera camera = CameraServer.getInstance().addAxisCamera("10.52.17.66");
+    CameraServer.getInstance().addAxisCamera("10.52.17.66");
+    
+    //Set camera width and height
+    camera.setResolution(width, height);
+    
+    //Vision thread
+    visionThread = new VisionThread(camera, new RightVision(), pipeline -> {
+			if(!pipeline.filterContoursOutput().isEmpty()){
+				Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
+				synchronized (imgLock){
+					centerX = r.x + (r.width / 2);
+				}
+			}
+		});
+		visionThread.start();
+    
    // m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
     // chooser.addOption("My Auto", new MyAutoCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
@@ -80,6 +110,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    //Tells the robot where to turn from vision
+    turn = centerX - (width / 2);
     m_autonomousCommand = m_chooser.getSelected();
 
     /*
@@ -100,11 +132,19 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
+    //Tells the robot where to turn from vision
+    double CenterX;
+		synchronized (imgLock){
+			centerX = this.centerX;
+		}
+		turn = centerX - (width / 2);
+    
     Scheduler.getInstance().run();
   }
 
   @Override
   public void teleopInit() {
+    turn = centerX - (width / 2);
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
@@ -119,6 +159,13 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
+    //Tells the robot where to turn from vision
+    double CenterX;
+		synchronized (imgLock){
+			centerX = this.centerX;
+		}
+		turn = centerX - (width / 2);
+    
     Scheduler.getInstance().run();
   }
 
