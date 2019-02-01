@@ -18,9 +18,13 @@ import frc.commands.driveSubsystemDefaultCommand;
  * Add your docs here.
  */
 public class DriveSubsystem extends Subsystem {
+  //SparkMax Motor
   public CANSparkMax motor;
   public CANSparkMax secondmotor;
-
+  public CANSparkMax elevator;
+  
+  //Limit switch
+  public static DigitalInput topElevator, bottomElevator, armDown, armUp;
 
   public DriveSubsystem(){
     motor = new CANSparkMax(60, MotorType.kBrushless);
@@ -39,6 +43,31 @@ public class DriveSubsystem extends Subsystem {
     SmartDashboard.putNumber("61 Encoder get", secondmotor.get());
     //motor.set(leftspeed);
     secondmotor.set(leftspeed);
+  }
+  
+  public void elevator(double speed){
+    SmartDashboard.putBoolean("Bottom Elevator", bottomElevator.get());
+    SmartDashboard.putBoolean("Top Elevator", topElevator.get());
+    SmartDashboard.putBoolean("Arm Down", armDown.get());
+    SmartDashboard.putBoolean("Arm Up", armUp.get());
+    
+    
+    double holdSpeed = 0.05;
+
+    //Look over this again
+    if(!(bottomElevator.get()) && speed > -0.1 && speed < 0.1) {
+      //Do nothing
+      speed = 0;
+    }else if(!(topElevator.get()) && speed > 0){
+      //Hold speed
+      speed = holdSpeed;
+    }else if(speed > -0.1 && speed < 0.1){
+      //hold speed
+      speed = holdSpeed;
+    }
+    SmartDashboard.putNumber("Speed", speed);
+    elevator.set(speed);
+    
   }
 
 }
