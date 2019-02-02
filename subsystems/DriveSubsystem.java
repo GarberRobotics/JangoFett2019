@@ -5,30 +5,41 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-package frc.subsystems;
+package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+//import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import frc.commands.driveSubsystemDefaultCommand;
+import frc.robot.commands.driveSubsystemDefaultCommand;
 /**
  * Add your docs here.
  */
 public class DriveSubsystem extends Subsystem {
   //SparkMax Motor
-  public CANSparkMax motor;
-  public CANSparkMax secondmotor;
-  public CANSparkMax elevator;
+  // public CANSparkMax motor;
+  // public CANSparkMax secondmotor;
+   public CANSparkMax elevatorMotor;
   
   //Limit switch
-  public static DigitalInput topElevator, bottomElevator, armDown, armUp;
+  public static DigitalInput topElevator, bottomElevator;
 
   public DriveSubsystem(){
-    motor = new CANSparkMax(60, MotorType.kBrushless);
-    secondmotor = new CANSparkMax(61, MotorType.kBrushless);
+    // motor = new CANSparkMax(60, MotorType.kBrushless);
+    elevatorMotor = new CANSparkMax(61, MotorType.kBrushless);
+    bottomElevator = new DigitalInput(0);
+    topElevator = new DigitalInput(4);
+  }
+
+  public double elevatorEncoderToFeet(double minus){
+    //About 1 ft
+    //65.4
+    double elevatorEncoder = ((elevatorMotor.getEncoder().getPosition() - minus) / 65.4);
+    //double feetL = (leftEncoder / -2497.0);
+    return elevatorEncoder;
   }
 
   @Override
@@ -38,24 +49,28 @@ public class DriveSubsystem extends Subsystem {
   }
 
   public void drive(double leftspeed, double rightspeed){
-    SmartDashboard.putNumber("61 Encoder", secondmotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("61 Encoder Velocity", secondmotor.getEncoder().getVelocity());
-    SmartDashboard.putNumber("61 Encoder get", secondmotor.get());
+    SmartDashboard.putNumber("61 Encoder", elevatorMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("61 Encoder Velocity", elevatorMotor.getEncoder().getVelocity());
+    SmartDashboard.putNumber("61 Encoder get", elevatorMotor.get());
     //motor.set(leftspeed);
-    secondmotor.set(leftspeed);
+    // secondmotor.set(leftspeed);
   }
   
-  public void elevator(double speed){
+  public void driveElevator(double speed){
     SmartDashboard.putBoolean("Bottom Elevator", bottomElevator.get());
     SmartDashboard.putBoolean("Top Elevator", topElevator.get());
-    SmartDashboard.putBoolean("Arm Down", armDown.get());
-    SmartDashboard.putBoolean("Arm Up", armUp.get());
-    
+        //minus 0 because we want to print the real feet.
+    SmartDashboard.putNumber("Encoder to feet", elevatorEncoderToFeet(0));
+    SmartDashboard.putNumber("61 Encoder", elevatorMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("61 Encoder Velocity", elevatorMotor.getEncoder().getVelocity());
+    SmartDashboard.putNumber("61 Encoder get", elevatorMotor.get());
     
     double holdSpeed = 0.05;
 
     //Look over this again
-    if(!(bottomElevator.get()) && speed > -0.1 && speed < 0.1) {
+    //If bottom elevator is triggered and if speed is about 0, do nothing; 
+    //If bottom elevator is triggered and speed is negitive, do nothing;
+    if(!(bottomElevator.get()) && speed > -0.1 && speed < 0.1 || !(bottomElevator.get()) && speed < 0) {
       //Do nothing
       speed = 0;
     }else if(!(topElevator.get()) && speed > 0){
@@ -66,7 +81,7 @@ public class DriveSubsystem extends Subsystem {
       speed = holdSpeed;
     }
     SmartDashboard.putNumber("Speed", speed);
-    elevator.set(speed);
+    elevatorMotor.set(speed);
     
   }
 
