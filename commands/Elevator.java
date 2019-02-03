@@ -29,8 +29,9 @@ public class Elevator extends Command {
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
-      //0.50 works!
-      Robot.driveSubsystem.driveElevator(0.50);
+      	//0.50 works!
+	//Full speed is fine
+      Robot.driveSubsystem.driveElevator(1);
     }
 
     // Make this return true when this Command no longer needs to run execute()
@@ -39,7 +40,7 @@ public class Elevator extends Command {
         return true;
       }
       return false;
-		}
+    }
     
 
     // Called once after isFinished returns true
